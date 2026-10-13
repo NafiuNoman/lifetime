@@ -199,4 +199,33 @@ void main() {
     expect(back.lifeYears, Tracker.defaultLifeYears);
     expect(Tracker.fromJson(t.copyWith(lifeYears: 85).toJson()).lifeYears, 85);
   });
+
+  group('DeadlineOffset.addTo', () {
+    test('age limit: 32 years after 2 May 1996', () {
+      const o = DeadlineOffset(years: 32);
+      expect(o.addTo(DateTime(1996, 5, 2)), DateTime(2028, 5, 2));
+      expect(o.label, '32 years');
+    });
+
+    test('mixed period rolls over months and years', () {
+      const o = DeadlineOffset(years: 1, months: 11, days: 5);
+      expect(o.addTo(DateTime(2020, 3, 28)), DateTime(2022, 3, 5));
+      expect(o.label, '1 year 11 months 5 days');
+    });
+
+    test('29 Feb clamps to 28 Feb in a non-leap year', () {
+      const o = DeadlineOffset(years: 1);
+      expect(o.addTo(DateTime(2024, 2, 29)), DateTime(2025, 2, 28));
+    });
+
+    test('round-trips through JSON on the tracker', () {
+      final t = _t(
+        start: DateTime(1996, 5, 2),
+        deadline: DateTime(2028, 5, 2),
+      ).copyWith(deadlineOffset: () => const DeadlineOffset(years: 32));
+      final back = Tracker.fromJson(t.toJson());
+      expect(back.deadlineOffset?.years, 32);
+      expect(back.deadlineAt, DateTime(2028, 5, 2));
+    });
+  });
 }

@@ -6,8 +6,9 @@ A personal, offline time tracker for people who want to see their time clearly. 
 
 - **Track any date**: titled entries showing live elapsed time (`2y 3m 14d · 05:12:09`)
   - Future start dates count down to the start
-- **Optional deadline**: elapsed + countdown + progress bar
+- **Optional deadline**: elapsed + countdown + progress pie (white = elapsed, grey = remaining)
   - Past the deadline the card shows **Overdue by …** instead of stopping at zero
+  - Set it **on a date**, or **after a period** (years / months / days from the start), e.g. a 32-year age limit from your date of birth
 - **Three types**
   - **Event**: time since/until any moment
   - **Age**: exact age, next birthday, "turning N in …", weekday you were born

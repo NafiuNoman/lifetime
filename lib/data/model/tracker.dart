@@ -39,6 +39,51 @@ class StreakReset {
   );
 }
 
+/// A deadline given as a period after the start, e.g. "32 years" for an
+/// age limit. Stored so the deadline follows the start date when edited.
+class DeadlineOffset {
+  final int years;
+  final int months;
+  final int days;
+
+  const DeadlineOffset({this.years = 0, this.months = 0, this.days = 0});
+
+  bool get isEmpty => years == 0 && months == 0 && days == 0;
+
+  /// Calendar addition. A day past the month's end clamps to its last day
+  /// (29 Feb + 1 year → 28 Feb).
+  DateTime addTo(DateTime d) {
+    final totalMonths = d.month - 1 + months + years * 12;
+    final y = d.year + totalMonths ~/ 12;
+    final m = totalMonths % 12 + 1;
+    final lastDay = DateTime(y, m + 1, 0).day;
+    final day = (d.day > lastDay ? lastDay : d.day) + days;
+    return DateTime(y, m, day, d.hour, d.minute);
+  }
+
+  /// "32 years", "1 year 6 months", "10 days"
+  String get label {
+    String part(int n, String unit) => '$n $unit${n == 1 ? '' : 's'}';
+    return [
+      if (years > 0) part(years, 'year'),
+      if (months > 0) part(months, 'month'),
+      if (days > 0) part(days, 'day'),
+    ].join(' ');
+  }
+
+  Map<String, dynamic> toJson() => {
+    'years': years,
+    'months': months,
+    'days': days,
+  };
+
+  factory DeadlineOffset.fromJson(Map<String, dynamic> j) => DeadlineOffset(
+    years: j['years'] as int? ?? 0,
+    months: j['months'] as int? ?? 0,
+    days: j['days'] as int? ?? 0,
+  );
+}
+
 /// A single tracked date: elapsed since [startAt], optionally counting down
 /// to [deadlineAt] (and showing "overdue" once it passes).
 class Tracker {
@@ -47,6 +92,9 @@ class Tracker {
   final TrackerType type;
   final DateTime startAt;
   final DateTime? deadlineAt;
+
+  /// Set when the deadline was entered as a period after [startAt].
+  final DeadlineOffset? deadlineOffset;
 
   /// Whether the user picked times, or just dates (shown as dates only).
   final bool withTime;
@@ -68,6 +116,7 @@ class Tracker {
     required this.type,
     required this.startAt,
     this.deadlineAt,
+    this.deadlineOffset,
     this.withTime = false,
     this.pinned = false,
     this.note,
@@ -81,6 +130,7 @@ class Tracker {
     TrackerType? type,
     DateTime? startAt,
     DateTime? Function()? deadlineAt,
+    DeadlineOffset? Function()? deadlineOffset,
     bool? withTime,
     bool? pinned,
     String? Function()? note,
@@ -92,6 +142,9 @@ class Tracker {
     type: type ?? this.type,
     startAt: startAt ?? this.startAt,
     deadlineAt: deadlineAt != null ? deadlineAt() : this.deadlineAt,
+    deadlineOffset: deadlineOffset != null
+        ? deadlineOffset()
+        : this.deadlineOffset,
     withTime: withTime ?? this.withTime,
     pinned: pinned ?? this.pinned,
     note: note != null ? note() : this.note,
@@ -106,6 +159,7 @@ class Tracker {
     'type': type.name,
     'startAt': startAt.toIso8601String(),
     if (deadlineAt != null) 'deadlineAt': deadlineAt!.toIso8601String(),
+    if (deadlineOffset != null) 'deadlineOffset': deadlineOffset!.toJson(),
     'withTime': withTime,
     'pinned': pinned,
     if (note != null) 'note': note,
@@ -122,6 +176,11 @@ class Tracker {
     deadlineAt: j['deadlineAt'] == null
         ? null
         : DateTime.parse(j['deadlineAt'] as String),
+    deadlineOffset: j['deadlineOffset'] == null
+        ? null
+        : DeadlineOffset.fromJson(
+            Map<String, dynamic>.from(j['deadlineOffset'] as Map),
+          ),
     withTime: j['withTime'] as bool? ?? false,
     pinned: j['pinned'] as bool? ?? false,
     note: j['note'] as String?,

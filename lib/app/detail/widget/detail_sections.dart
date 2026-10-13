@@ -9,6 +9,7 @@ import '../../../theme/app_icons.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text.dart';
 import '../../../widgets/app_card.dart';
+import '../../../widgets/app_pie.dart';
 import '../../../widgets/app_progress.dart';
 import '../../../widgets/app_section_header.dart';
 
@@ -159,35 +160,46 @@ class DeadlineSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    m.overdue ? AppIcons.warning : AppIcons.hourglass,
-                    size: 20,
-                    color: m.overdue
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              m.overdue ? AppIcons.warning : AppIcons.hourglass,
+                              size: 20,
+                              color: m.overdue
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              m.overdue ? 'Overdue by' : 'Time left',
+                              style: m.overdue ? AppText.label : AppText.bodySm,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          '${m.overdue ? '+' : ''}${compactSpan(span)}',
+                          style: AppText.titleLg,
+                        ),
+                        Text(
+                          clockSpan(span),
+                          style: AppText.bodySm.copyWith(
+                            color: AppColors.textTertiary,
+                            fontFeatures: _tabular,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    m.overdue ? 'Overdue by' : 'Time left',
-                    style: m.overdue ? AppText.label : AppText.bodySm,
-                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  AppPie(value: m.progress ?? 0, size: 72),
                 ],
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                '${m.overdue ? '+' : ''}${compactSpan(span)}',
-                style: AppText.titleLg,
-              ),
-              Text(
-                clockSpan(span),
-                style: AppText.bodySm.copyWith(
-                  color: AppColors.textTertiary,
-                  fontFeatures: _tabular,
-                ),
-              ),
               const SizedBox(height: AppSpacing.md),
-              AppProgress(value: m.progress ?? 0, height: 6),
-              const SizedBox(height: AppSpacing.xs),
               Row(
                 children: [
                   Expanded(
@@ -203,6 +215,13 @@ class DeadlineSection extends StatelessWidget {
                   ),
                 ],
               ),
+              if (t.deadlineOffset != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  '${t.deadlineOffset!.label} after start',
+                  style: AppText.caption,
+                ),
+              ],
             ],
           ),
         ),

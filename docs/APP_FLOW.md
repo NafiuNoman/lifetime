@@ -71,7 +71,7 @@ flowchart TD
   - Overline: `SINCE <date>` / `AGE` / `CURRENT STREAK` / `STARTS IN`
   - Headline in the chosen `DisplayFormat`, plus a ticking `hh:mm:ss`
   - Footnote: `Turns N in …` (age), `Best …` (habit with history)
-  - Deadline line: progress, `%`, and `Xd left` or **⚠ Overdue by …**
+  - Deadline line: `Xd left` or **⚠ Overdue by …** and `% passed` on the left, progress pie (`lib/widgets/app_pie.dart`) on the right
 - Sorting (`lib/service/tracker_store.dart:104`): pinned first, then the selected `SortMode`.
 - **View options** sheet (`lib/app/home/widget/view_options_sheet.dart`): display format (`Y M D` / `Days` / `Hours`) and sort. Both are persisted.
 
@@ -94,6 +94,7 @@ flowchart TD
 ```
 
 - Type segmented control changes labels: *Date* / *Date of birth* / *Streak started*. **Age** hides the deadline, since the birthday countdown is automatic.
+- Deadline has two modes: **On a date** (date + optional time picker) or **After a period** (Years / Months / Days fields). Period mode computes `deadlineAt = DeadlineOffset.addTo(startAt)` with calendar math (29 Feb clamps to 28 Feb), shows a live "Ends on …" preview, and saves `deadlineOffset` so the deadline follows the start date on edit (`lib/data/model/tracker.dart`, `lib/app/editor/controller/editor_controller.dart`).
 - **Include time** switch adds time pickers. Without it, dates are midnight local time.
 - Validation: `lib/app/editor/controller/editor_controller.dart:135`. Save: `:159`.
 - Errors follow the design system: icon + "Error: …" text + white 1.5px border. No red is used.
@@ -104,7 +105,7 @@ flowchart TD
 
 1. Header: type, title, start date, big headline, and a ticking clock
 2. **Breakdown**: years, months, days, hours, minutes, seconds
-3. **Deadline** (if set): time left or overdue (`+` prefix + warning icon), progress bar from start date to deadline with `%`
+3. **Deadline** (if set): time left or overdue (`+` prefix + warning icon), progress pie on the right (white = elapsed, grey = remaining), start date · `%` · deadline below
 4. **Birthday** (age): next birthday + weekday, `Turning N in`, `Born on a <weekday>`, plus the **Life in weeks** card
 5. **Streak** (habit): best streak, attempts, **Reset streak**, history list
 6. **In total**: months, weeks, days, hours, minutes, seconds
@@ -193,6 +194,7 @@ None. The app is local-only, with no network calls.
   "type": "habit",
   "startAt": "2026-10-01T00:00:00.000",
   "deadlineAt": "2026-12-31T00:00:00.000",
+  "deadlineOffset": { "years": 0, "months": 0, "days": 0 },   // only when set by period
   "withTime": false,
   "pinned": true,
   "note": "optional",

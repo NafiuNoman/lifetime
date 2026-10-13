@@ -8,7 +8,7 @@ import '../../../theme/app_icons.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text.dart';
 import '../../../widgets/app_card.dart';
-import '../../../widgets/app_progress.dart';
+import '../../../widgets/app_pie.dart';
 import '../../../widgets/tracker_type_icon.dart';
 
 /// One tracker on the home list. Rebuilt every tick by the parent `Obx`.
@@ -124,32 +124,41 @@ class _DeadlineLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pct = ((m.progress ?? 0) * 100).floor();
-    return Column(
+    return Row(
       children: [
-        AppProgress(value: m.progress ?? 0),
-        const SizedBox(height: AppSpacing.xs),
-        Row(
-          children: [
-            Text('$pct%', style: AppText.bodySm),
-            const Spacer(),
-            if (m.overdue) ...[
-              const Icon(
-                AppIcons.warning,
-                size: 16,
-                color: AppColors.textPrimary,
-              ),
-              const SizedBox(width: AppSpacing.xxs),
-              Text(
-                'Overdue by ${compactSpan(m.overdueBy!)}',
-                style: AppText.label,
-              ),
-            ] else
-              Text(
-                '${compactSpan(m.remaining!)} left',
-                style: AppText.bodySm.copyWith(color: AppColors.textPrimary),
-              ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (m.overdue)
+                Row(
+                  children: [
+                    const Icon(
+                      AppIcons.warning,
+                      size: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                    const SizedBox(width: AppSpacing.xxs),
+                    Flexible(
+                      child: Text(
+                        'Overdue by ${compactSpan(m.overdueBy!)}',
+                        style: AppText.label,
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Text(
+                  '${compactSpan(m.remaining!)} left',
+                  style: AppText.bodySm.copyWith(color: AppColors.textPrimary),
+                ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text('$pct% passed', style: AppText.bodySm),
+            ],
+          ),
         ),
+        const SizedBox(width: AppSpacing.sm),
+        AppPie(value: m.progress ?? 0),
       ],
     );
   }

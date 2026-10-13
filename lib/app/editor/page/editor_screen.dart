@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../core/formatters.dart';
@@ -123,6 +124,69 @@ class EditorScreen extends GetView<EditorController> {
                   ),
                   if (c.hasDeadline.value) ...[
                     const SizedBox(height: AppSpacing.xs),
+                    SegmentedButton<bool>(
+                      showSelectedIcon: false,
+                      segments: const [
+                        ButtonSegment(
+                          value: false,
+                          label: Text('On a date'),
+                          icon: Icon(AppIcons.calendar, size: 20),
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          label: Text('After a period'),
+                          icon: Icon(AppIcons.hourglass, size: 20),
+                        ),
+                      ],
+                      selected: {c.deadlineByPeriod.value},
+                      onSelectionChanged: (s) {
+                        c.deadlineByPeriod.value = s.first;
+                        c.deadlineError.value = null;
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                  if (c.hasDeadline.value && c.deadlineByPeriod.value) ...[
+                    Row(
+                      children: [
+                        _PeriodField(
+                          label: 'Years',
+                          ctrl: c.yearsCtrl,
+                          hasError: c.deadlineError.value != null,
+                          onChanged: c.onPeriodChanged,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        _PeriodField(
+                          label: 'Months',
+                          ctrl: c.monthsCtrl,
+                          hasError: c.deadlineError.value != null,
+                          onChanged: c.onPeriodChanged,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        _PeriodField(
+                          label: 'Days',
+                          ctrl: c.daysCtrl,
+                          hasError: c.deadlineError.value != null,
+                          onChanged: c.onPeriodChanged,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      c.periodDeadline == null
+                          ? 'Counted from the ${c.startLabel.toLowerCase()}, '
+                                'e.g. 32 years from date of birth.'
+                          : 'Ends on ${formatDate(c.periodDeadline!)} '
+                                '(${c.period.value.label} after '
+                                '${formatDate(c.startDate.value!)})',
+                      style: AppText.bodySm.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                    if (c.deadlineError.value != null)
+                      AppFieldError(c.deadlineError.value!),
+                  ],
+                  if (c.hasDeadline.value && !c.deadlineByPeriod.value) ...[
                     AppPickerField(
                       icon: AppIcons.hourglass,
                       value: c.deadlineDate.value == null
@@ -175,6 +239,49 @@ class EditorScreen extends GetView<EditorController> {
             child: Text(c.isEditing ? 'Save changes' : 'Add'),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// One numeric box (Years / Months / Days) of a period deadline.
+class _PeriodField extends StatelessWidget {
+  final String label;
+  final TextEditingController ctrl;
+  final bool hasError;
+  final VoidCallback onChanged;
+
+  const _PeriodField({
+    required this.label,
+    required this.ctrl,
+    required this.hasError,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppFieldLabel(label),
+          TextField(
+            controller: ctrl,
+            style: AppText.body,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(3),
+            ],
+            decoration: InputDecoration(
+              hintText: '0',
+              enabledBorder: hasError
+                  ? Theme.of(context).inputDecorationTheme.errorBorder
+                  : null,
+            ),
+            onChanged: (_) => onChanged(),
+          ),
+        ],
       ),
     );
   }
